@@ -1,0 +1,23 @@
+
+{% extends "main.html" %}
+{% block content %}
+
+Einkauf {{bon[0]}} am {{bon[4]}} von {{bon[3]}} über {{bon[1]}} bei {{bon[2]}}.
+<table class="table table-striped table-hover">
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Price</th>
+      <th>Amount bought</th>
+    </tr>
+  </thead>
+{% for p in items %}
+  <tr>
+    <td><a href="/products/{{p[0]}}">{{p[0]}}</a></td> 
+    <td><a href="/products/{{p[0]}}">{{"%.2f" % p[1]}}</a></td> 
+    <td><a href="/products/{{p[0]}}">{{ p[2]}}</a></td>
+  </tr>
+     
+  {% endfor %}
+  </table>
+{% endblock %}

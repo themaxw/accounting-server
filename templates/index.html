@@ -1,0 +1,24 @@
+
+{% extends "main.html" %}
+{% block content %}
+<table class="table table-striped table-hover">
+  <thead>
+    <tr>
+        <th>Buyer</th>
+        <th>Shop</th>
+        <th>Total</th>
+        <th>Date</th>
+    </tr>
+  </thead>
+     
+    {% for bon in bons %}
+        <tr>
+          <td><a href="/bon/{{bon[0]}}">{{bon[3]}}</a></td>
+          <td><a href="/bon/{{bon[0]}}">{{bon[2]}}</a></td>
+          <td><a href="/bon/{{bon[0]}}">{{bon[1]}}</a></td>
+          <td><a href="/bon/{{bon[0]}}">{{bon[4]}}</a></td>	
+      </tr>
+    {% endfor %}
+  </table>
+{% endblock %}
+  

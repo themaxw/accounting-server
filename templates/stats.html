@@ -1,0 +1,232 @@
+
+{% extends "main.html" %}
+{% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" integrity="sha256-Uv9BNBucvCPipKQ2NS9wYpJmi8DTOEfTA/nH2aoJALw=" crossorigin="anonymous"></script>
+<div class="row">
+    <div class="col-12 col-md-6">
+        <div class="card border-primary mb-3">
+            <h3 class="card-header">Total spending per Month</h3>
+            <div class="card-body">
+                <canvas id="total"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6">
+        <div class="card border-success mb-3">
+            <h3 class="card-header">Money spent on Cornflakes</h3>
+            <div class="card-body">
+                <canvas id="cornflakes"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6">
+        <div class="card border-primary mb-3">
+            <h3 class="card-header">Spending distribution current Month</h3>
+            <div class="card-body">
+                <canvas id="month-distribution" height="400px"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6">
+        <div class="card border-primary mb-3">
+            <h3 class="card-header">Spending distribution current Month</h3>
+            <div class="card-body">
+                <canvas id="total-distribution" height="400px"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6">
+        <div class="card border-primary mb-3">
+            <h3 class="card-header">Spending distribution current Month</h3>
+            <div class="card-body">
+                <canvas id="total-distribution-line" height="400px"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<a href="/updateStats"><button class="btn btn-warning">update</button></a>
+
+
+<script>
+    d = document.getElementById("stats")
+    d.className += " active"
+</script>
+
+<script>
+    function bargraph(id, label, labels, values){
+    
+        var flake = document.getElementById(id);
+        var colors = [];
+        var bgcolors = [];
+        var hbgcolors = [];
+        for(var step = 0; step < labels.length; step++){
+            // This function generates vibrant, "evenly spaced" colours (i.e. no clustering). This is ideal for creating easily distinguishable vibrant markers in Google Maps and other apps.
+            // Adam Cole, 2011-Sept-14
+            // HSV to RBG adapted from: http://mjijackson.com/2008/02/rgb-to-hsl-and-rgb-to-hsv-color-model-conversion-algorithms-in-javascript
+            var r, g, b;
+            var h = step / labels.length;
+            var i = ~~(h * 6);
+            var f = h * 6 - i;
+            var q = 1 - f;
+            switch(i % 6){
+                case 0: r = 1; g = f; b = 0; break;
+                case 1: r = q; g = 1; b = 0; break;
+                case 2: r = 0; g = 1; b = f; break;
+                case 3: r = 0; g = q; b = 1; break;
+                case 4: r = f; g = 0; b = 1; break;
+                case 5: r = 1; g = 0; b = q; break;
+            }
+            var c = "rgba(" + (r * 255).toString(10) + ", " + (g * 255).toString(10) + ", " + (b * 255).toString(10);
+            colors.push(c+", 1.0)");
+            bgcolors.push(c+", 0.2)");
+            hbgcolors.push(c+ ", 0.5)")
+        }
+        
+        var myChart = new Chart(flake, {
+            type: 'bar', 
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: values,
+                    hoverBackgroundColor: hbgcolors,
+                    hoverBorderColor: colors,
+                    backgroundColor: bgcolors,
+                    borderColor: colors,
+                    borderWidth: 1
+                }]
+            },
+        options: {
+            legend:{
+                display: false
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+        
+    });};
+
+    function donut(id, label, labels, values){
+        var flake = document.getElementById(id);
+        var colors = [];
+        var bgcolors = [];
+        var hbgcolors = [];
+        for(var step = 0; step < labels.length; step++){
+            // This function generates vibrant, "evenly spaced" colours (i.e. no clustering). This is ideal for creating easily distinguishable vibrant markers in Google Maps and other apps.
+            // Adam Cole, 2011-Sept-14
+            // HSV to RBG adapted from: http://mjijackson.com/2008/02/rgb-to-hsl-and-rgb-to-hsv-color-model-conversion-algorithms-in-javascript
+            var r, g, b;
+            var h = step / labels.length;
+            var i = ~~(h * 6);
+            var f = h * 6 - i;
+            var q = 1 - f;
+            switch(i % 6){
+                case 0: r = 1; g = f; b = 0; break;
+                case 1: r = q; g = 1; b = 0; break;
+                case 2: r = 0; g = 1; b = f; break;
+                case 3: r = 0; g = q; b = 1; break;
+                case 4: r = f; g = 0; b = 1; break;
+                case 5: r = 1; g = 0; b = q; break;
+            }
+            var c = "rgba(" + (r * 255).toString(10) + ", " + (g * 255).toString(10) + ", " + (b * 255).toString(10);
+            colors.push(c+", 1.0)");
+            bgcolors.push(c+", 0.2)");
+            hbgcolors.push(c+", 0.5)");
+        }
+        var myChart = new Chart(flake, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: values,
+                    hoverBackgroundColor: hbgcolors,
+                    hoverBorderColor: colors,
+                    backgroundColor: bgcolors,
+                    borderColor: colors,
+                    borderWidth: 1
+                }]
+            }
+        })
+    };
+
+    function line(id, label, labels, values){
+    
+    var flake = document.getElementById(id);
+    var colors = [];
+    var bgcolors = [];
+    var hbgcolors = [];
+    for(var step = 0; step < labels.length; step++){
+        // This function generates vibrant, "evenly spaced" colours (i.e. no clustering). This is ideal for creating easily distinguishable vibrant markers in Google Maps and other apps.
+        // Adam Cole, 2011-Sept-14
+        // HSV to RBG adapted from: http://mjijackson.com/2008/02/rgb-to-hsl-and-rgb-to-hsv-color-model-conversion-algorithms-in-javascript
+        var r, g, b;
+        var h = step / labels.length;
+        var i = ~~(h * 6);
+        var f = h * 6 - i;
+        var q = 1 - f;
+        switch(i % 6){
+            case 0: r = 1; g = f; b = 0; break;
+            case 1: r = q; g = 1; b = 0; break;
+            case 2: r = 0; g = 1; b = f; break;
+            case 3: r = 0; g = q; b = 1; break;
+            case 4: r = f; g = 0; b = 1; break;
+            case 5: r = 1; g = 0; b = q; break;
+        }
+        var c = "rgba(" + (r * 255).toString(10) + ", " + (g * 255).toString(10) + ", " + (b * 255).toString(10);
+        colors.push(c+", 1.0)");
+        bgcolors.push(c+", 0.2)");
+        hbgcolors.push(c+ ", 0.5)")
+    }
+    
+    var myChart = new Chart(flake, {
+        type: 'line', 
+        data: {
+            labels: labels,
+            datasets: [{
+                label: label,
+                data: values,
+                backgroundColor: "rgba(255,255,20,0.2)"
+            }]
+        },
+    options: {
+        legend:{
+            display: false
+        },
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+            }]
+        }
+    }
+    
+});};
+    
+
+    var clabels = {{cornflake_data['labels']|tojson}};
+    var cvalues = {{cornflake_data['values']|tojson}};
+    bargraph('cornflakes', 'Money spent on Cornflakes per Month', clabels, cvalues)
+
+    var labels = {{total_data['labels']|tojson}};
+    var values = {{total_data['values']|tojson}};
+    bargraph('total', 'Total Money spent per Month', labels, values)
+
+    var dlabels = {{month_data['labels']|tojson}};
+    var dvalues = {{month_data['values']|tojson}};
+    donut('month-distribution', "This Month's spending", dlabels, dvalues)
+
+    var tlabels = {{totaldist_data['labels']|tojson}};
+    var tvalues = {{totaldist_data['values']|tojson}};
+    donut('total-distribution', "Total spending", tlabels, tvalues)
+    line('total-distribution-line', "Total spending", tlabels, tvalues)
+
+</script>
+{% endblock %}
