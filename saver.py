@@ -1,8 +1,8 @@
 import sqlite3
 import datetime
 #from appJar import gui
-
-path="C:\\Users\\max\\Documents\\piStuff\\server\\"
+from config import baseDir
+from os import path
 
 def insertBon(c, total, shop, buyer, date=None):
 	if date is None:
@@ -25,7 +25,8 @@ def enterBon(c):
 	print(purchaseId)
 
 def setup():
-	conn = sqlite3.connect(path + 'purchases')
+	print(path.join(baseDir, 'resources', 'purchases'))
+	conn = sqlite3.connect(path.join(baseDir, 'resources', 'purchases'))
 	return conn
 
 def close(conn):
@@ -101,7 +102,4 @@ def getBon(purchaseId):
 
 
 if __name__ == '__main__':
-	conn = setup()
-	c = conn.cursor()
-	enterBon(c)
-	close(conn)
+	print(getList())

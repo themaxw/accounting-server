@@ -1,0 +1,5 @@
+{
+    "users": ["Max", "Martha"],
+    "basedir": "C:/Users/max/Documents/piStuff/accounting-server/",
+    "blacklist": ["IKEA", "Jugendherberge", "Regal", "Spiegel", "Fensterfolie", "Flugticket", "Miete"]
+}

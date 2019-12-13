@@ -7,12 +7,13 @@ import numpy as np
 import calendar
 import datetime
 import json
+from os import path
+from config import baseDir, blacklist, staticDir
 
-blacklist = ['IKEA', 'Jugendherberge', 'Regal', 'Spiegel', 'Fensterfolie', 'Flugticket', 'Miete']
-path ="C:\\Users\\max\\Documents\\piStuff\\server\\static\\"
-pathMain ="C:\\Users\\max\\Documents\\piStuff\\server\\"
+
+baseDir ="C:\\Users\\max\\Documents\\piStuff\\server\\"
 def setup():
-    conn = sqlite3.connect(pathMain + 'purchases')
+    conn = sqlite3.connect(path.join(baseDir, 'resources', 'purchases'))
     return conn
 
 def close(conn):
@@ -31,10 +32,7 @@ def add_months(sourcedate, months):
     day = min(sourcedate.day, calendar.monthrange(year,month)[1])
     return datetime.date(year, month, day)
 
-def abrechnung(start='2018-01-01', end='2030-01-01'):
-    s = parseDate(start)
-    e = parseDate(end)
-    
+def abrechnung(start='2018-01-01', end='2030-01-01'):    
     conn = setup()
     c = conn.cursor()
 
@@ -92,7 +90,7 @@ def totalGraph(start=None, end=None, resolution=7):
     for s, e in zip(frame, frame[1:]):
         values.append(abrechnung(s, e)[0])
     c = {'labels': [datetime.datetime.strptime(f, "%Y-%m-%d").strftime("%m.%Y") for f in frame[:-1]], 'values': values}
-    with open(path + "total.json", 'w') as f:
+    with open(path.join(baseDir, "resources", "total.json"), 'w') as f:
         json.dump(c, f)
 
 def cornflakesGraph(start=None, end=None, resolution=15):
@@ -112,7 +110,7 @@ def cornflakesGraph(start=None, end=None, resolution=15):
     close(conn)
 
     c = {'labels': [datetime.datetime.strptime(f, "%Y-%m-%d").strftime("%m.%Y") for f in frame[:-1]], 'values': values}
-    with open(path + "cornflakes.json", 'w') as f:
+    with open(path.join(baseDir, "resources", "cornflakes.json"), 'w') as f:
         json.dump(c, f)
 
 def singleProductGraph(productName, start=None, end=None, resolution=15):
@@ -216,7 +214,7 @@ def getMonthSpendings(start:str = None, nProducts:int = 15):
     jsonlist['values'].append(sum([p[1] for p in sortedSpendings[nProducts:]]))
 
     close(conn)
-    with open(path + "month.json", 'w') as f:
+    with open(path.join(baseDir, "resources", "month.json"), 'w') as f:
         json.dump(jsonlist, f)
 
 def getTotalSpendings(nProducts = 15):
@@ -230,7 +228,7 @@ def getTotalSpendings(nProducts = 15):
     jsonlist['labels'].append('Sonstige')
     jsonlist['values'].append(sum([p[1] for p in productlist[nProducts:]]))
 
-    with open(path + "totaldist.json", 'w') as f:
+    with open(path.join(baseDir, "resources", "totaldist.json"), 'w') as f:
         json.dump(jsonlist, f)
 
 

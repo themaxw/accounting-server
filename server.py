@@ -7,29 +7,29 @@ from wtforms import TextField, DecimalField, IntegerField, SubmitField, RadioFie
 from wtforms.fields.html5 import DateField
 from stats import update, getAutocompleteList, getProductStats, getSingleProductStats, abrechnung, singleProductGraph
 import json
+from os import path
+from config import staticDir, users
 
-pathToStatic="C:\\Users\\max\\Documents\\piStuff\\server\\static\\"
-#pathToStatic="/home/pi/server/static/"
 app = Flask(__name__)
 app.secret_key = 'development key'
 
 class BonForm(FlaskForm):
-    buyer = RadioField('Buyer', choices=[('Max', 'Max'), ('Martha', 'Martha')], default='Max')
-    shop = TextField("shop", [validators.required("Enter Shop")], id='shop',  render_kw={'autofocus': True})
-    total = DecimalField("Total Price", [validators.required("Enter Price")])
+    buyer = RadioField('Buyer', choices=[(x, x) for x in users], default=users[0])
+    shop = TextField("shop", [validators.input_required("Enter Shop")], id='shop',  render_kw={'autofocus': True})
+    total = DecimalField("Total Price", [validators.input_required("Enter Price")])
     date = DateField('date', format='%Y-%m-%d')
     submit = SubmitField('Send')
 
 class ItemForm(FlaskForm):
-    productName = TextField("productName", [validators.required("Enter product name")], id='productName',  render_kw={'autofocus': True})
-    price = DecimalField("Individual Price", [validators.required("Enter Price")])
+    productName = TextField("productName", [validators.input_required("Enter product name")], id='productName',  render_kw={'autofocus': True})
+    price = DecimalField("Individual Price", [validators.input_required("Enter Price")])
     amount = IntegerField('amount', [validators.optional()])
     submit = SubmitField('Send')
 
 class ReckoningForm(FlaskForm):
     start = DateField('Month', format='%Y-%m-%d')
     submit = SubmitField('Rechne Ab')
-    #end = DateField('End Date', format='%Y-%m-%d')
+    
 
 @app.route('/')
 def index():
@@ -47,7 +47,6 @@ def enterBonForm():
     else:
         if not form.validate_on_submit():
             flash('All fields are required.')
-            print('rip')
             return redirect('/enterBon')
 
         buyer = form.buyer.data
@@ -92,13 +91,13 @@ def deleteItemForm(purchaseId, itemId):
 
 @app.route('/stats')
 def stats():
-    with open(pathToStatic + "cornflakes.json", 'r') as f:
+    with open(path.join(staticDir, "resources", "cornflakes.json"), 'r') as f:
         cornflake_data = json.load(f) 
-    with open(pathToStatic + "total.json", 'r') as f:
+    with open(path.join(staticDir, "resources", "total.json"), 'r') as f:
         total_data = json.load(f) 
-    with open(pathToStatic + "month.json", 'r') as f:
+    with open(path.join(staticDir, "resources", "month.json"), 'r') as f:
         month_data = json.load(f) 
-    with open(pathToStatic + "totaldist.json", 'r') as f:
+    with open(path.join(staticDir, "resources", "totaldist.json"), 'r') as f:
         totaldist_data = json.load(f) 
 
     return render_template("stats.html", cornflake_data=cornflake_data, total_data=total_data, month_data=month_data, totaldist_data=totaldist_data)
