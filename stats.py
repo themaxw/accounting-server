@@ -11,7 +11,6 @@ from os import path
 from config import baseDir, blacklist, staticDir
 
 
-baseDir ="C:\\Users\\max\\Documents\\piStuff\\server\\"
 def setup():
     conn = sqlite3.connect(path.join(baseDir, 'resources', 'purchases'))
     return conn
