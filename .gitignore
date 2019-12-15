@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# custom stuff
+purchases
+serverconfig.json
+
+/resources/*.json

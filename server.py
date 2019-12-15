@@ -8,7 +8,7 @@ from wtforms.fields.html5 import DateField
 from stats import update, getAutocompleteList, getProductStats, getSingleProductStats, abrechnung, singleProductGraph
 import json
 from os import path
-from config import staticDir, users
+from config import baseDir, users
 
 app = Flask(__name__)
 app.secret_key = 'development key'
@@ -91,13 +91,13 @@ def deleteItemForm(purchaseId, itemId):
 
 @app.route('/stats')
 def stats():
-    with open(path.join(staticDir, "resources", "cornflakes.json"), 'r') as f:
+    with open(path.join(baseDir, "resources", "cornflakes.json"), 'r') as f:
         cornflake_data = json.load(f) 
-    with open(path.join(staticDir, "resources", "total.json"), 'r') as f:
+    with open(path.join(baseDir, "resources", "total.json"), 'r') as f:
         total_data = json.load(f) 
-    with open(path.join(staticDir, "resources", "month.json"), 'r') as f:
+    with open(path.join(baseDir, "resources", "month.json"), 'r') as f:
         month_data = json.load(f) 
-    with open(path.join(staticDir, "resources", "totaldist.json"), 'r') as f:
+    with open(path.join(baseDir, "resources", "totaldist.json"), 'r') as f:
         totaldist_data = json.load(f) 
 
     return render_template("stats.html", cornflake_data=cornflake_data, total_data=total_data, month_data=month_data, totaldist_data=totaldist_data)
