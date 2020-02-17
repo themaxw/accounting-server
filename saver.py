@@ -1,8 +1,11 @@
 import sqlite3
 import datetime
 #from appJar import gui
-from config import baseDir
+from config import baseDir, users
 from os import path
+
+import sqlalchemy
+from sqlalchemy import create_engine
 
 def insertBon(c, total, shop, buyer, date=None):
 	if date is None:
@@ -13,7 +16,7 @@ def insertBon(c, total, shop, buyer, date=None):
 
 def enterBon(c):
 	name = ''
-	while name not in ('Martha', 'Max'):
+	while name not in users:
 		name = input("name: ")
 	shop = input("shop: ")
 	total = float(input("total: "))
