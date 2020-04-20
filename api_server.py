@@ -1,9 +1,6 @@
 from flask import Flask
-from flask_restful import Api, Resource, fields, marshal_with, reqparse, abort
-from db import getList, getItems, getBon, getProduct, insertBon, insertItem, delBon, delItem
-
-
-
+from flask_restful import Api, Resource, abort, fields, marshal_with, reqparse
+import db
 
 fields_product_gist = {
     "productName": fields.String,
@@ -36,7 +33,7 @@ fields_bon_gist = {
 }
 
 fields_product = {
-    "productId" : fields.Integer,
+    "productId": fields.Integer,
     'shop': fields.String,
     'price': fields.Float,
     'name': fields.String,
@@ -54,53 +51,67 @@ item_parser.add_argument("productName", required=True)
 item_parser.add_argument("amount", type=int, required=True)
 item_parser.add_argument("price", type=float, required=True)
 
-class List(Resource):
+
+class BonList(Resource):
     @marshal_with(fields_bon_gist)
     def get(self):
-        bons = getList()
+        bons = db.getBonList()
         return bons
-    
+
+
+class ProductList(Resource):
+    def get(self):
+        products = db.getProductList()
+        return products
+
+
 class Bon(Resource):
     @marshal_with(fields_bon)
     def get(self, purchaseId):
-        b = getBon(purchaseId)
+        b = db.getBon(purchaseId)
         return b
 
     def post(self, purchaseId):
         args = item_parser.parse_args()
-        insertItem(purchaseId, args['productName'], args['price'], args['amount'])
+        db.insertItem(purchaseId, args['productName'],
+                      args['price'], args['amount'])
         return '', 201
 
     def delete(self, purchaseId):
-        delBon(purchaseId)
+        db.delBon(purchaseId)
         return '', 200
+
 
 class NewBon(Resource):
     def post(self):
         args = bon_parser.parse_args()
-        purchaseId = insertBon(args['total'], args['shop'], args['buyer'], args['date'])
+        purchaseId = db.insertBon(
+            args['total'], args['shop'], args['buyer'], args['date'])
         return {"purchaseId": purchaseId}
+
 
 class Item(Resource):
     def delete(self, purchaseId, itemId):
-        delItem(purchaseId, itemId)
+        db.delItem(purchaseId, itemId)
         return '', 200
+
 
 class Product(Resource):
     @marshal_with(fields_product)
     def get(self, productName):
-        p = getProduct(productName)
-        return p 
-
+        p = db.getProduct(productName)
+        return p
 
 
 def init(app):
     api = Api(app)
-    api.add_resource(List, "/api/list")
+    api.add_resource(BonList, "/api/bons")
+    api.add_resource(ProductList, "/api/products")
     api.add_resource(Bon, "/api/bon/<int:purchaseId>")
     api.add_resource(NewBon, "/api/bon")
     api.add_resource(Item, "/api/bon/<int:purchaseId>/item/<int:itemId>")
-    api.add_resource(Product, "/api/product/<str:productName>")
+    api.add_resource(Product, "/api/product/<productName>")
+
 
 if __name__ == "__main__":
     app = Flask(__name__)

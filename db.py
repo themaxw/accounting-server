@@ -4,13 +4,14 @@ from config import baseDir
 from os import path
 
 import sqlalchemy
-from sqlalchemy import create_engine, ForeignKey, ForeignKeyConstraint
+from sqlalchemy import create_engine, ForeignKey, ForeignKeyConstraint, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Date, Float
 from sqlalchemy.orm import sessionmaker, relationship
 engine = create_engine('sqlite:///resources/purchases')
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
+
 
 class Bon(Base):
     __tablename__ = 'bons'
@@ -21,10 +22,11 @@ class Bon(Base):
     buyer = Column(String)
     date = Column(Date)
 
-    
     def __repr__(self):
         return "<Bon(total='{}', shop='{}', buyer='{}', date='{}')>".format(
-                             self.total, self.shop, self.buyer, self.date)
+            self.total, self.shop, self.buyer, self.date)
+
+
 class Product(Base):
     __tablename__ = 'products'
 
@@ -35,7 +37,8 @@ class Product(Base):
 
     def __repr__(self):
         return "<Product(productId='{}', name='{}', price='{}', shop='{}')>".format(
-                             self.productId, self.productName, self.price, self.shop)
+            self.productId, self.productName, self.price, self.shop)
+
 
 class Item(Base):
     __tablename__ = 'items'
@@ -44,53 +47,60 @@ class Item(Base):
     itemId = Column(Integer, ForeignKey(Product.productId), primary_key=True)
     price = Column(Float)
     amount = Column(Integer)
-    
+
     bon = relationship("Bon", back_populates="items")
     product = relationship("Product", back_populates="items")
+
     def __repr__(self):
         return "<Item(purchaseId='{}', itemId='{}', price='{}', amount='{}')>".format(
-                             self.purchaseId, self.itemId, self.price, self.amount)
+            self.purchaseId, self.itemId, self.price, self.amount)
+
 
 Bon.items = relationship("Item", order_by=Item.itemId, back_populates="bon")
-Product.items = relationship("Item", order_by=Item.purchaseId, back_populates="product")
+Product.items = relationship(
+    "Item", order_by=Item.purchaseId, back_populates="product")
 
 
 def insertBon(total, shop, buyer, date=None):
     """[summary]
-    
+
     Arguments:
         total {float} -- [description]
         shop {str} -- [description]
         buyer {str} -- [description]
-    
+
     Keyword Arguments:
         date {str} -- [description] (default: {None})
-    
+
     Returns:
         int -- purchaseId
     """
     if date is None:
         date = datetime.datetime.now().strftime("%Y-%m-%d")
-    
-    b = Bon(total=total, shop=shop, buyer=buyer, date=datetime.date.fromisoformat(date))
+
+    b = Bon(total=total, shop=shop, buyer=buyer,
+            date=datetime.date.fromisoformat(date))
     session = Session()
     session.add(b)
     session.commit()
     return b.purchaseId
 
+
 def insertItem(purchaseId, productName, price, amount):
     """[summary]
-    
+
     Arguments:
         purchaseId {int} -- [description]
         productName {str} -- [description]
         price {float} -- [description]
         amount {int} -- [description]
-    """    
+    """
     session = Session()
-    shop = session.query(Bon.shop).filter(Bon.purchaseId == purchaseId).scalar()
+    shop = session.query(Bon.shop).filter(
+        Bon.purchaseId == purchaseId).scalar()
     try:
-        p, productId, oldPrice = session.query(Product, Product.productId, Product.price).filter(Product.productName == productName and Product.shop == shop).scalar()
+        p, productId, oldPrice = session.query(Product, Product.productId, Product.price).filter(
+            Product.productName == productName and Product.shop == shop).scalar()
         if price != oldPrice:
             p.price = price
             session.commit()
@@ -102,35 +112,62 @@ def insertItem(purchaseId, productName, price, amount):
         session.commit()
         productId = p.productId
         session = Session()
-    item = Item(purchaseId=purchaseId, itemId=productId, price=price, amount=amount)
+    item = Item(purchaseId=purchaseId, itemId=productId,
+                price=price, amount=amount)
     session.add(item)
     session.commit()
 
-def getList():
+
+def getBonList():
     session = Session()
     bons = session.query(Bon).order_by(Bon.date.desc()).all()
     return bons
+
+
+def getProductList():
+    session = Session()
+    products = session.query(Product).all()
+    # TODO make this more elegant and efficient, maybe with fancy query?
+    mergeDict = {}
+    for p in products:
+        total = sum([x.price*x.amount for x in p.items])
+        amt = sum([x.amount for x in p.items])
+        if p.productName in mergeDict:
+            mergeDict[p.productName]['amount'] = mergeDict[p.productName]['amount'] + amt
+            mergeDict[p.productName]['total'] = mergeDict[p.productName]['total'] + total
+        else:
+            mergeDict[p.productName] = {'amount': amt, 'total': total}
+    products = [(key, mergeDict[key]['total'], mergeDict[key]['amount'])
+                for key in mergeDict]
+    return sorted(products, key=lambda x: x[1], reverse=True)
+
 
 def getItems(purchaseId):
     session = Session()
     items = session.query(Item).filter(Item.purchaseId == purchaseId).all()
     return items
 
+
 def getProduct(productName):
     session = Session()
-    product = session.query(Product).filter(Product.name == productName).all()
+    product = session.query(Product).filter(
+        Product.productName == productName).all()
     return product
+
 
 def getBon(purchaseId):
     session = Session()
     bon = session.query(Bon).filter(Bon.purchaseId == purchaseId).one()
     return bon
 
+
 def delItem(purchaseId, itemId):
     session = Session()
-    item = session.query(Item).filter(Item.purchaseId == purchaseId and Item.itemId == itemId).one()
+    item = session.query(Item).filter(
+        Item.purchaseId == purchaseId and Item.itemId == itemId).one()
     session.delete(item)
     session.commit()
+
 
 def delBon(purchaseId):
     session = Session()
@@ -139,10 +176,7 @@ def delBon(purchaseId):
         session.delete(i)
     session.delete(bon)
     session.commit()
-    
+
+
 if __name__ == "__main__":
-    session = Session()
-    
-    i = Item(purchaseId=195, itemId=400, price=20, amount=2)
-    session.add(i)
-    session.commit()
+    print(getProductList())
