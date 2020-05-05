@@ -75,7 +75,7 @@ def insertBon(total, shop, buyer, date=None):
     Returns:
         int -- purchaseId
     """
-    if date is None:
+    if date is None or date == "":
         date = datetime.datetime.now().strftime("%Y-%m-%d")
 
     b = Bon(total=total, shop=shop, buyer=buyer,
@@ -177,6 +177,25 @@ def delBon(purchaseId):
     session.delete(bon)
     session.commit()
 
+def getAutocompleteShops():
+    session = Session()
+    shops = list(set(session.query(Bon.shop).all()))
+    shops.sort()
+    return [s[0] for s in shops]
+
+def getAutocompleteItems(shop):
+    #TODO make efficient pl0x
+    session = Session()
+    productsWithPrice = session.query(Product.productName, Product.price).filter(Product.shop == shop).all()
+    productsWithoutPrice = session.query(Product.productName).filter(Product.shop != shop).all()
+    pwp = (p[0] for p in productsWithPrice)
+    pwop = set((p[0] for p in productsWithoutPrice)).difference(pwp)
+    for p in pwop:
+        productsWithPrice.append((p, None))
+    productsWithPrice.sort(key=lambda x: str(x[0]) )
+    return productsWithPrice
+
+
 
 if __name__ == "__main__":
-    print(getProductList())
+    print(getAutocompleteItems('Aldi'))

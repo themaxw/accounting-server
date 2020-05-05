@@ -1,6 +1,11 @@
 from flask import Flask
 from flask_restful import Api, Resource, abort, fields, marshal_with, reqparse
+from flask_cors import CORS
 import db
+
+app = Flask(__name__)
+api = Api(app)
+
 
 fields_product_gist = {
     "productName": fields.String,
@@ -85,6 +90,7 @@ class Bon(Resource):
 class NewBon(Resource):
     def post(self):
         args = bon_parser.parse_args()
+        print(args)
         purchaseId = db.insertBon(
             args['total'], args['shop'], args['buyer'], args['date'])
         return {"purchaseId": purchaseId}
@@ -102,18 +108,29 @@ class Product(Resource):
         p = db.getProduct(productName)
         return p
 
+class AutocompleteShops(Resource):
+    def get(self):
+        s = db.getAutocompleteShops()
+        return s
 
-def init(app):
-    api = Api(app)
+class AutocompleteItems(Resource):
+    def get(self, shop):
+        i = db.getAutocompleteItems(shop)
+        return i
+
+
+def init():
     api.add_resource(BonList, "/api/bons")
     api.add_resource(ProductList, "/api/products")
     api.add_resource(Bon, "/api/bon/<int:purchaseId>")
     api.add_resource(NewBon, "/api/bon")
     api.add_resource(Item, "/api/bon/<int:purchaseId>/item/<int:itemId>")
-    api.add_resource(Product, "/api/product/<productName>")
-
+    api.add_resource(Product, "/api/products/<productName>")
+    api.add_resource(AutocompleteShops, "/api/auto/shops")
+    api.add_resource(AutocompleteItems, "/api/auto/items/<shop>")
+    
 
 if __name__ == "__main__":
-    app = Flask(__name__)
-    init(app)
+    CORS(app)
+    init()
     app.run(debug=True)
