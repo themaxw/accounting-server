@@ -6,7 +6,7 @@ class Home extends Component {
     state = { bons: [] }
     componentDidMount() {
 
-        axios.get('http://127.0.0.1:5000/api/bons')
+        axios.get(this.props.apiUrl + 'bons')
             .then((response) => {
                 this.setState({ bons: response.data })
             },

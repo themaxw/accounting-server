@@ -41,6 +41,7 @@ td a:hover {
   top: 100%;
   left: 0;
   right: 0;
+  max-height: 10% !important;
 }
 .autocomplete-items div {
   padding: 10px;

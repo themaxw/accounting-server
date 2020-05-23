@@ -1,19 +1,18 @@
-import React, { Component } from 'react';
-import { useRouteMatch, Switch, Route, useParams } from 'react-router-dom';
+import React from 'react';
+import { useRouteMatch, Switch, Route } from 'react-router-dom';
 import Product from './Product'
 import Products from './Products'
 
-function ProductsRouter() {
+function ProductsRouter(props) {
     let { path, url } = useRouteMatch()
-    let { productName } = useParams()
+
 
     return (<Switch>
         <Route exact path={path}>
-            <Products url={url} />
+            <Products url={url} apiUrl={props.apiUrl} />
         </Route>
         <Route path={`${path}/:productName`}>
-            {console.log("reeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", productName)}
-            <Product productName={productName} />
+            <Product apiUrl={props.apiUrl} />
         </Route>
     </Switch>)
 }

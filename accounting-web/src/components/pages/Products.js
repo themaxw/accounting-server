@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios'
-import { Switch, Route, Link, useRouteMatch, useParams } from 'react-router-dom'
-import Product from './Product'
+import { Link } from 'react-router-dom'
+
 
 
 class Products extends Component {
@@ -13,7 +13,7 @@ class Products extends Component {
     }
     state = {}
     componentDidMount = () => {
-        axios.get('http://127.0.0.1:5000/api/products')
+        axios.get(this.props.apiUrl + 'products')
             .then((response) => {
                 this.setState({ products: response.data })
             })

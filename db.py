@@ -4,13 +4,15 @@ from config import baseDir
 from os import path
 
 import sqlalchemy
-from sqlalchemy import create_engine, ForeignKey, ForeignKeyConstraint, func
+from sqlalchemy import create_engine, ForeignKey, ForeignKeyConstraint, func, inspect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Date, Float
 from sqlalchemy.orm import sessionmaker, relationship
 engine = create_engine('sqlite:///resources/purchases')
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
+
+import statistics
 
 
 class Bon(Base):
@@ -61,6 +63,8 @@ Product.items = relationship(
     "Item", order_by=Item.purchaseId, back_populates="product")
 
 
+
+
 def insertBon(total, shop, buyer, date=None):
     """[summary]
 
@@ -98,15 +102,18 @@ def insertItem(purchaseId, productName, price, amount):
     session = Session()
     shop = session.query(Bon.shop).filter(
         Bon.purchaseId == purchaseId).scalar()
+
+    if amount == None:
+        amount = 1
     try:
-        p, productId, oldPrice = session.query(Product, Product.productId, Product.price).filter(
-            Product.productName == productName and Product.shop == shop).scalar()
+        p = session.query(Product).filter(Product.productName == productName, Product.shop == shop).scalar()
+        productId, oldPrice = p.productId, p.price
         if price != oldPrice:
             p.price = price
             session.commit()
             session = Session()
 
-    except Exception:
+    except AttributeError as e:
         p = Product(price=price, productName=productName, shop=shop)
         session.add(p)
         session.commit()
@@ -117,10 +124,15 @@ def insertItem(purchaseId, productName, price, amount):
     session.add(item)
     session.commit()
 
+    session = Session()
+    return item
+
+
 
 def getBonList():
     session = Session()
     bons = session.query(Bon).order_by(Bon.date.desc()).all()
+    
     return bons
 
 
@@ -139,34 +151,47 @@ def getProductList():
             mergeDict[p.productName] = {'amount': amt, 'total': total}
     products = [(key, mergeDict[key]['total'], mergeDict[key]['amount'])
                 for key in mergeDict]
+    
     return sorted(products, key=lambda x: x[1], reverse=True)
 
 
 def getItems(purchaseId):
     session = Session()
     items = session.query(Item).filter(Item.purchaseId == purchaseId).all()
+    
     return items
-
 
 def getProduct(productName):
     session = Session()
     product = session.query(Product).filter(
         Product.productName == productName).all()
-    return product
+    products = []
+    for p in product:
+        pDict = p.__dict__
+        
+        pDict['avg'] = statistics.mean([price for i in p.items for price in [i.price]*i.amount ])
+        pDict['total'] = sum([i.price*i.amount for i in p.items])
+        products.append(pDict)
+    
+    return products
 
 
 def getBon(purchaseId):
     session = Session()
     bon = session.query(Bon).filter(Bon.purchaseId == purchaseId).one()
+    
     return bon
 
 
 def delItem(purchaseId, itemId):
     session = Session()
     item = session.query(Item).filter(
-        Item.purchaseId == purchaseId and Item.itemId == itemId).one()
+        Item.purchaseId == purchaseId, Item.itemId == itemId).one()
+    retItem = item.__dict__
     session.delete(item)
     session.commit()
+    return retItem
+    
 
 
 def delBon(purchaseId):
@@ -176,11 +201,14 @@ def delBon(purchaseId):
         session.delete(i)
     session.delete(bon)
     session.commit()
+    return bon
+    
 
 def getAutocompleteShops():
     session = Session()
     shops = list(set(session.query(Bon.shop).all()))
     shops.sort()
+    
     return [s[0] for s in shops]
 
 def getAutocompleteItems(shop):
@@ -193,9 +221,10 @@ def getAutocompleteItems(shop):
     for p in pwop:
         productsWithPrice.append((p, None))
     productsWithPrice.sort(key=lambda x: str(x[0]) )
-    return productsWithPrice
+    
+    return [{'productName':p[0], 'price':p[1]} for p in productsWithPrice]
 
 
 
 if __name__ == "__main__":
-    print(getAutocompleteItems('Aldi'))
+    print(insertItem(220, "Brot", 1.1, 1))

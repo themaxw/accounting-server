@@ -14,7 +14,8 @@ fields_product_gist = {
 fields_item = {
     "price": fields.Float,
     "amount": fields.Integer,
-    "product": fields.Nested(fields_product_gist)
+    "product": fields.Nested(fields_product_gist),
+    "itemId": fields.Integer
 }
 fields_item_gist = {
     "price": fields.Float,
@@ -41,7 +42,9 @@ fields_product = {
     "productId": fields.Integer,
     'shop': fields.String,
     'price': fields.Float,
-    'name': fields.String,
+    'productName': fields.String,
+    'avg': fields.Float,
+    'total': fields.Float,
     'items': fields.List(fields.Nested(fields_item_gist))
 }
 
@@ -53,7 +56,7 @@ bon_parser.add_argument("date", default=None)
 
 item_parser = reqparse.RequestParser()
 item_parser.add_argument("productName", required=True)
-item_parser.add_argument("amount", type=int, required=True)
+item_parser.add_argument("amount", type=int, default=None)
 item_parser.add_argument("price", type=float, required=True)
 
 
@@ -76,15 +79,17 @@ class Bon(Resource):
         b = db.getBon(purchaseId)
         return b
 
+    @marshal_with(fields_item)
     def post(self, purchaseId):
+        
         args = item_parser.parse_args()
-        db.insertItem(purchaseId, args['productName'],
+        item = db.insertItem(purchaseId, args['productName'],
                       args['price'], args['amount'])
-        return '', 201
-
+        return item, 201
+    @marshal_with(fields_bon)
     def delete(self, purchaseId):
-        db.delBon(purchaseId)
-        return '', 200
+        bon = db.delBon(purchaseId)
+        return bon, 200
 
 
 class NewBon(Resource):
@@ -97,9 +102,10 @@ class NewBon(Resource):
 
 
 class Item(Resource):
+    @marshal_with(fields_item)
     def delete(self, purchaseId, itemId):
-        db.delItem(purchaseId, itemId)
-        return '', 200
+        item = db.delItem(purchaseId, itemId)
+        return item, 200
 
 
 class Product(Resource):
@@ -133,4 +139,4 @@ def init():
 if __name__ == "__main__":
     CORS(app)
     init()
-    app.run(debug=True)
+    app.run(host="0.0.0.0", debug=True)

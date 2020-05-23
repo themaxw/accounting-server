@@ -29,7 +29,7 @@ class EnterBon extends Component {
         }
     }
     componentDidMount = () => {
-        axios.get("http://localhost:5000/api/auto/shops").then((resp) => this.setState({ autocompleteShops: resp.data }))
+        axios.get(this.props.apiUrl + "auto/shops").then((resp) => this.setState({ autocompleteShops: resp.data }))
     }
     changeHandler = (event) => {
         let nam = event.target.name;
@@ -38,10 +38,10 @@ class EnterBon extends Component {
     }
     submitHandler = (event) => {
         event.preventDefault()
-        axios.post("http://localhost:5000/api/bon", { shop: this.state.shopValue, buyer: this.state.buyer, total: this.state.total, date: this.state.date })
+        axios.post(this.props.apiUrl + "bon", { shop: this.state.shopValue, buyer: this.state.buyer, total: this.state.total, date: this.state.date })
             .then((resp) => {
                 cookies.set('buyer', this.state.buyer);
-                this.setState({ redirectUrl: '/enterItem/' + resp.data.purchaseId, redirect: true })
+                this.setState({ redirectUrl: '/enterBon/' + resp.data.purchaseId, redirect: true })
             })
     }
 
