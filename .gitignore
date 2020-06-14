@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 serverconfig.json
 resources/purchases
+.vscode/launch.json
+.vscode/settings.json
