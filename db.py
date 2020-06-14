@@ -1,8 +1,9 @@
+import statistics
 import datetime
 
-from config import baseDir
+from config import baseDir, users, blacklist
 from os import path
-
+from collections import defaultdict
 import sqlalchemy
 from sqlalchemy import create_engine, ForeignKey, ForeignKeyConstraint, func, inspect
 from sqlalchemy.ext.declarative import declarative_base
@@ -11,8 +12,6 @@ from sqlalchemy.orm import sessionmaker, relationship
 engine = create_engine('sqlite:///resources/purchases')
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
-
-import statistics
 
 
 class Bon(Base):
@@ -63,8 +62,6 @@ Product.items = relationship(
     "Item", order_by=Item.purchaseId, back_populates="product")
 
 
-
-
 def insertBon(total, shop, buyer, date=None):
     """[summary]
 
@@ -106,7 +103,8 @@ def insertItem(purchaseId, productName, price, amount):
     if amount == None:
         amount = 1
     try:
-        p = session.query(Product).filter(Product.productName == productName, Product.shop == shop).scalar()
+        p = session.query(Product).filter(
+            Product.productName == productName, Product.shop == shop).scalar()
         productId, oldPrice = p.productId, p.price
         if price != oldPrice:
             p.price = price
@@ -128,11 +126,10 @@ def insertItem(purchaseId, productName, price, amount):
     return item
 
 
-
 def getBonList():
     session = Session()
     bons = session.query(Bon).order_by(Bon.date.desc()).all()
-    
+
     return bons
 
 
@@ -151,15 +148,16 @@ def getProductList():
             mergeDict[p.productName] = {'amount': amt, 'total': total}
     products = [(key, mergeDict[key]['total'], mergeDict[key]['amount'])
                 for key in mergeDict]
-    
+
     return sorted(products, key=lambda x: x[1], reverse=True)
 
 
 def getItems(purchaseId):
     session = Session()
     items = session.query(Item).filter(Item.purchaseId == purchaseId).all()
-    
+
     return items
+
 
 def getProduct(productName):
     session = Session()
@@ -168,18 +166,19 @@ def getProduct(productName):
     products = []
     for p in product:
         pDict = p.__dict__
-        
-        pDict['avg'] = statistics.mean([price for i in p.items for price in [i.price]*i.amount ])
+
+        pDict['avg'] = statistics.mean(
+            [price for i in p.items for price in [i.price]*i.amount])
         pDict['total'] = sum([i.price*i.amount for i in p.items])
         products.append(pDict)
-    
+
     return products
 
 
 def getBon(purchaseId):
     session = Session()
     bon = session.query(Bon).filter(Bon.purchaseId == purchaseId).one()
-    
+
     return bon
 
 
@@ -191,7 +190,6 @@ def delItem(purchaseId, itemId):
     session.delete(item)
     session.commit()
     return retItem
-    
 
 
 def delBon(purchaseId):
@@ -202,29 +200,54 @@ def delBon(purchaseId):
     session.delete(bon)
     session.commit()
     return bon
-    
+
 
 def getAutocompleteShops():
     session = Session()
     shops = list(set(session.query(Bon.shop).all()))
     shops.sort()
-    
+
     return [s[0] for s in shops]
 
+
 def getAutocompleteItems(shop):
-    #TODO make efficient pl0x
+    # TODO make efficient pl0x
     session = Session()
-    productsWithPrice = session.query(Product.productName, Product.price).filter(Product.shop == shop).all()
-    productsWithoutPrice = session.query(Product.productName).filter(Product.shop != shop).all()
+    productsWithPrice = session.query(
+        Product.productName, Product.price).filter(Product.shop == shop).all()
+    productsWithoutPrice = session.query(
+        Product.productName).filter(Product.shop != shop).all()
     pwp = (p[0] for p in productsWithPrice)
     pwop = set((p[0] for p in productsWithoutPrice)).difference(pwp)
     for p in pwop:
         productsWithPrice.append((p, None))
-    productsWithPrice.sort(key=lambda x: str(x[0]) )
-    
-    return [{'productName':p[0], 'price':p[1]} for p in productsWithPrice]
+    productsWithPrice.sort(key=lambda x: str(x[0]))
 
+    return [{'productName': p[0], 'price':p[1]} for p in productsWithPrice]
+
+
+def getAbrechnung(dateBegin, dateEnd):
+    session = Session()
+    bons = session.query(Bon).filter(
+        Bon.date.between(dateBegin, dateEnd)).all()
+    paidPerPerson = defaultdict(int)
+    excludedPerPerson = defaultdict(int)
+    for b in bons:
+        excluded = 0
+        for i in b.items:
+            if i.product.productName in blacklist:
+                excluded += i.price * i.amount
+        excludedPerPerson[b.buyer] += excluded
+        paidPerPerson[b.buyer] += b.total - excluded
+    returnDict = {}
+    sharePerPerson = sum(paidPerPerson.values())/len(users)
+    for person, paid in paidPerPerson.items():
+        returnDict[person] = {
+            'paid': paid,
+            'diff': sharePerPerson-paid,
+            'excl': excludedPerPerson[person]}
+    return returnDict
 
 
 if __name__ == "__main__":
-    print(insertItem(220, "Brot", 1.1, 1))
+    getAbrechnung(datetime.date(2020, 4, 1), datetime.date(2020, 6, 1))

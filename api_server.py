@@ -1,6 +1,7 @@
 from flask import Flask
-from flask_restful import Api, Resource, abort, fields, marshal_with, reqparse
 from flask_cors import CORS
+from flask_restful import Api, Resource, abort, fields, marshal_with, reqparse
+import datetime
 import db
 
 app = Flask(__name__)
@@ -81,11 +82,12 @@ class Bon(Resource):
 
     @marshal_with(fields_item)
     def post(self, purchaseId):
-        
+
         args = item_parser.parse_args()
         item = db.insertItem(purchaseId, args['productName'],
-                      args['price'], args['amount'])
+                             args['price'], args['amount'])
         return item, 201
+
     @marshal_with(fields_bon)
     def delete(self, purchaseId):
         bon = db.delBon(purchaseId)
@@ -114,15 +116,25 @@ class Product(Resource):
         p = db.getProduct(productName)
         return p
 
+
 class AutocompleteShops(Resource):
     def get(self):
         s = db.getAutocompleteShops()
         return s
 
+
 class AutocompleteItems(Resource):
     def get(self, shop):
         i = db.getAutocompleteItems(shop)
         return i
+
+
+class Abrechnung(Resource):
+    def get(self):
+
+        a = db.getAbrechnung(datetime.date(2020, 4, 1),
+                             datetime.date(2020, 6, 1))
+        return a
 
 
 def init():
@@ -134,7 +146,8 @@ def init():
     api.add_resource(Product, "/api/products/<productName>")
     api.add_resource(AutocompleteShops, "/api/auto/shops")
     api.add_resource(AutocompleteItems, "/api/auto/items/<shop>")
-    
+    api.add_resource(Abrechnung, "/api/abrechnung")
+
 
 if __name__ == "__main__":
     CORS(app)
