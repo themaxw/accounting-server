@@ -133,3 +133,7 @@ purchases
 serverconfig.json
 
 /resources/*.json
+serverconfig.json
+resources/purchases
+.vscode/launch.json
+.vscode/settings.json
