@@ -7,7 +7,6 @@ import db
 app = Flask(__name__)
 api = Api(app)
 
-
 fields_product_gist = {
     "productName": fields.String,
     "price": fields.Float
@@ -59,6 +58,10 @@ item_parser = reqparse.RequestParser()
 item_parser.add_argument("productName", required=True)
 item_parser.add_argument("amount", type=int, default=None)
 item_parser.add_argument("price", type=float, required=True)
+
+reckoning_parser = reqparse.RequestParser()
+reckoning_parser.add_argument("startDate", required=True)
+reckoning_parser.add_argument("endDate", required=True)
 
 
 class BonList(Resource):
@@ -131,9 +134,8 @@ class AutocompleteItems(Resource):
 
 class Abrechnung(Resource):
     def get(self):
-
-        a = db.getAbrechnung(datetime.date(2020, 4, 1),
-                             datetime.date(2020, 6, 1))
+        args = reckoning_parser.parse_args()
+        a = db.getAbrechnung(args['startDate'], args['endDate'])
         return a
 
 

@@ -10,7 +10,7 @@ import EnterBonRouter from './components/pages/EnterBonRouter'
 import Home from './components/pages/Home'
 import ProductsRouter from './components/pages/ProductsRouter'
 import DetailsBon from './components/pages/DetailsBon'
-
+import Reckoning from './components/pages/Reckoning'
 
 function App() {
   let apiUrl = "http://192.168.178.21:5000/api/"
@@ -30,6 +30,9 @@ function App() {
 
           <Route path="/products">
             <ProductsRouter apiUrl={apiUrl} />
+          </Route>
+          <Route path="/reckoning">
+            <Reckoning apiUrl={apiUrl} />
           </Route>
           <Route exact path="/">
             <Home apiUrl={apiUrl} />

@@ -227,11 +227,13 @@ def getAutocompleteItems(shop):
 
 
 def getAbrechnung(dateBegin, dateEnd):
+
     session = Session()
     bons = session.query(Bon).filter(
         Bon.date.between(dateBegin, dateEnd)).all()
-    paidPerPerson = defaultdict(int)
-    excludedPerPerson = defaultdict(int)
+    paidPerPerson = dict([(u, 0) for u in users])
+    excludedPerPerson = dict([(u, 0) for u in users])
+
     for b in bons:
         excluded = 0
         for i in b.items:
@@ -239,15 +241,20 @@ def getAbrechnung(dateBegin, dateEnd):
                 excluded += i.price * i.amount
         excludedPerPerson[b.buyer] += excluded
         paidPerPerson[b.buyer] += b.total - excluded
-    returnDict = {}
+
+    returnList = []
     sharePerPerson = sum(paidPerPerson.values())/len(users)
+
     for person, paid in paidPerPerson.items():
-        returnDict[person] = {
-            'paid': paid,
-            'diff': sharePerPerson-paid,
-            'excl': excludedPerPerson[person]}
-    return returnDict
+        returnList.append({
+            'person': person,
+            'paid': round(paid, 2),
+            'diff': round(sharePerPerson-paid, 2),
+            'excl': round(excludedPerPerson[person],  2)
+        })
+
+    return returnList
 
 
 if __name__ == "__main__":
-    getAbrechnung(datetime.date(2020, 4, 1), datetime.date(2020, 6, 1))
+    print(getAbrechnung("2020-04-01", "2020-06-01"))
