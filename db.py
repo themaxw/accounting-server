@@ -195,11 +195,12 @@ def delItem(purchaseId, itemId):
 def delBon(purchaseId):
     session = Session()
     bon = session.query(Bon).filter(Bon.purchaseId == purchaseId).one()
+    retBon = bon.__dict__
     for i in bon.items:
         session.delete(i)
     session.delete(bon)
     session.commit()
-    return bon
+    return retBon
 
 
 def getAutocompleteShops():
