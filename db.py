@@ -99,7 +99,7 @@ def insertItem(purchaseId, productName, price, amount):
     session = Session()
     shop = session.query(Bon.shop).filter(
         Bon.purchaseId == purchaseId).scalar()
-
+    price = round(price, 2)
     if amount == None:
         amount = 1
     try:
