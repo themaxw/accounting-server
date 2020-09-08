@@ -9,6 +9,7 @@ from sqlalchemy import create_engine, ForeignKey, ForeignKeyConstraint, func, in
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Date, Float
 from sqlalchemy.orm import sessionmaker, relationship
+
 engine = create_engine('sqlite:///resources/purchases')
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
@@ -174,6 +175,18 @@ def getProduct(productName):
 
     return products
 
+def getProductPurchasesOrdered(productName):
+    session = Session()
+    product = session.query(Product).filter(
+        Product.productName == productName).all()
+    purchases = []
+    for p in product:
+        for i in p.items:
+            amt = i.amount
+            date = i.bon.date
+            purchases.append({"amount": amt, "date": date})
+
+    return sorted(purchases, key=lambda p: p["date"])
 
 def getBon(purchaseId):
     session = Session()
@@ -258,4 +271,10 @@ def getAbrechnung(dateBegin, dateEnd):
 
 
 if __name__ == "__main__":
-    print(getAbrechnung("2020-04-01", "2020-06-01"))
+    print(getProductPurchasesOrdered("Gouda"))
+    # session = Session()
+    # items = session.query(Item).all()
+    # for i in items:
+    #     if i.bon is None:
+    #         session.delete(i)
+    # session.commit()
