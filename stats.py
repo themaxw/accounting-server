@@ -125,4 +125,4 @@ def scatterPlotFrequency(productName):
 
 
 if __name__ == '__main__':
-    scatterPlotFrequency("Milch")
+    scatterPlotFrequency("Cornflakes")

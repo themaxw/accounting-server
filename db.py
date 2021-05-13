@@ -269,12 +269,15 @@ def getAbrechnung(dateBegin, dateEnd):
 
     return returnList
 
+def deleteItemsWithoutBon():
+    session = Session()
+    items = session.query(Item).all()
+    for i in items:
+        if i.bon is None:
+            session.delete(i)
+            print("delet")
+    session.commit()
 
 if __name__ == "__main__":
     print(getProductPurchasesOrdered("Gouda"))
-    # session = Session()
-    # items = session.query(Item).all()
-    # for i in items:
-    #     if i.bon is None:
-    #         session.delete(i)
-    # session.commit()
+    
